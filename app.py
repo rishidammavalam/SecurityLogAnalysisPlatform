@@ -3,6 +3,7 @@ from parser import parse_log_line
 from detector import detect_brute_force
 
 app = Flask(__name__)
+app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024
 
 @app.route("/")
 def home():
@@ -20,15 +21,22 @@ def upload_log():
 
     events = []
 
-    for line in uploaded_file.stream:
-        decoded_line = line.decode("utf-8")
+    for line_number, line in enumerate(uploaded_file.stream, start=1):
+        try:
+            decoded_line = line.decode("utf-8")
 
-        if not decoded_line.strip():
-            continue
+            if not decoded_line.strip():
+                continue
         
-        event = parse_log_line(decoded_line)
-        events.append(event)
+            event = parse_log_line(decoded_line)
+            events.append(event)
+        
+        except (ValueError, UnicodeDecodeError) as error:
+            return f"Invalid log entry on line {line_number}: {error}", 400
 
+    if not events:
+        return "The uploaded log file contains no events", 400
+    
     alerts = detect_brute_force(events)
 
     return render_template("results.html", events=events, alerts=alerts)
