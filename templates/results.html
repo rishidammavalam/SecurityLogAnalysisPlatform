@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis Results</title>
+</head>
+<body>
+    <h1>Security Analysis Results</h1>
+
+    <h2>Summary</h2>
+    <p>Total Events: {{ events|length }}</p>
+    <p>Total Alerts: {{ alerts|length }}</p>
+
+    <h2>Detected Alerts</h2>
+
+    {% for alert in alerts %}
+        <div>
+            <h3>{{ alert.type }}</h3>
+            <p>Source IP: {{ alert.source_ip }}</p>
+            <p>Failed Attempts: {{ alert.failed_attempts }}</p>
+            <p>Severity: {{ alert.severity }}</p>
+            <p>MITRE ATT&CK: {{ alert.mitre_id }} - {{ alert.mitre_name }}</p>
+        </div>
+    {% else %}
+        <p>No security alerts detected.</p>
+    {% endfor %}
+
+    <a href="/">Analyze Another File</a>
+</body>
+</html>

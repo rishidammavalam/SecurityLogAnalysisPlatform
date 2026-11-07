@@ -1,4 +1,6 @@
 from flask import Flask, render_template, request
+from parser import parse_log_line
+from detector import detect_brute_force
 
 app = Flask(__name__)
 
@@ -10,7 +12,26 @@ def home():
 def upload_log():
     uploaded_file = request.files["log_file"]
 
-    return f"Uploaded file: {uploaded_file.filename}"
+    if uploaded_file.filename == "":
+        return "No file selected", 400
+
+    if not uploaded_file.filename.lower().endswith((".log", ".txt")):
+        return "Invalid file type", 400
+
+    events = []
+
+    for line in uploaded_file.stream:
+        decoded_line = line.decode("utf-8")
+
+        if not decoded_line.strip():
+            continue
+        
+        event = parse_log_line(decoded_line)
+        events.append(event)
+
+    alerts = detect_brute_force(events)
+
+    return render_template("results.html", events=events, alerts=alerts)
 
 if __name__ == "__main__":
     app.run(debug=True)
